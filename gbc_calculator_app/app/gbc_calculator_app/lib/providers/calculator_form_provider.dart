@@ -101,6 +101,36 @@ class CalculatorFormProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+
+
+  double _employerWithholding = 0.0;
+
+  double get employerWithholding => _employerWithholding;
+
+  set employerWithholding ( double employerWithholding ) {
+    _employerWithholding = employerWithholding;
+    notifyListeners();
+  }
+
+
+  double _differentCapacityDeduction = 0.0;
+
+  double get differentCapacityDeduction => _differentCapacityDeduction;
+
+  set differentCapacityDeduction ( double differentCapacityDeduction ) {
+    _differentCapacityDeduction = differentCapacityDeduction;
+    notifyListeners();
+  }
+
+  double _totalDeductions = 0.0;
+
+  double get totalDeductions => _totalDeductions;
+
+  set totalDeductions ( double totalDeductions ) {
+    _totalDeductions = totalDeductions;
+    notifyListeners();
+  }
+
   
 
 }

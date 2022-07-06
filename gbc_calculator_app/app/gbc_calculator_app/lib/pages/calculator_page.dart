@@ -54,8 +54,11 @@ class _FormState extends State<_Form> {
     double taxOnBasicFraction   = 0;
     double taxOnSurplusFraction = 0;
     double totalTax             = 0;
+    double totalTaxToPay        = 0;
+    double employerWithholding  = 0;
     double discountForPersonalExpenses = 0;
-    double totalTaxToPay = 0;
+    double differentCapacityDeduction  = 0;
+    double totalDeductions  = 0;
 
     CalculatorFormProvider calcFormPrvd = Provider.of<CalculatorFormProvider>(context);
 
@@ -242,12 +245,18 @@ class _FormState extends State<_Form> {
                     personalContribution = Config.getPersonalContribution(
                         double.parse(formValues['grossIncome']!),
                         formValues['sector']!);
-                    calcFormPrvd.personalContribution = personalContribution;
+                    calcFormPrvd.personalContribution = personalContribution;                    
 
                     netIncome = Config.getNetIncome(
                         double.parse(formValues['grossIncome']!),
                         personalContribution);
-                    calcFormPrvd.netIncome = netIncome;
+                    calcFormPrvd.netIncome = netIncome;                    
+
+                    differentCapacityDeduction = Config.getDifferentCapacityDeduction( int.parse( formValues['percentsDifferentCaps']!  ) );
+                    calcFormPrvd.differentCapacityDeduction = differentCapacityDeduction;
+
+                    totalDeductions = Config.getTotalDeductions(personalContribution, differentCapacityDeduction);
+                    calcFormPrvd.totalDeductions = totalDeductions;
 
                     basicFraction = Config.getBasicFraction( netIncome );
                     calcFormPrvd.basicFraction = basicFraction;
@@ -269,6 +278,9 @@ class _FormState extends State<_Form> {
 
                     totalTaxToPay = Config.getTotalTaxToPay(totalTax, discountForPersonalExpenses);
                     calcFormPrvd.totalTaxToPay = totalTaxToPay;
+
+                    employerWithholding = Config.getEmployerWithholding( totalTaxToPay );
+                    calcFormPrvd.employerWithholding = employerWithholding;
                     
                   },
                   child: Row(
@@ -315,6 +327,28 @@ class _Results extends StatelessWidget {
               Expanded(child: Container()),
               Text('${calcFormPrvd.personalContribution.toStringAsFixed(2)} US\$',
                   style: AppTheme.resultStyle),
+            ],
+          ),          
+          if ( calcFormPrvd.differentCapacityDeduction > 0 )
+            Column(
+                children: [
+                  const SizedBox(height: 5),
+                  Row(
+                  children: [
+                    Text('Deducción por Capacidad Diferente:', style: AppTheme.resultStyle),
+                    Expanded(child: Container()),
+                    Text('${calcFormPrvd.differentCapacityDeduction.toStringAsFixed(2)} US\$',
+                        style: AppTheme.resultStyle),
+                  ],
+                ),    
+                ],
+            ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Total Deducciones:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.totalDeductions.toStringAsFixed(2)} US\$', style: AppTheme.resultStyle),
             ],
           ),
           const SizedBox(height: 5),
@@ -385,7 +419,20 @@ class _Results extends StatelessWidget {
               Expanded(child: Container()),
               Text('${ calcFormPrvd.totalTaxToPay.toStringAsFixed( 2 ) } US\$', style: AppTheme.resultStyle),
             ],
-          )
+          ),
+          if ( calcFormPrvd.employerWithholding > 0 )
+            Column(
+              children: [
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Text('Tu empleador te rentendrá mensualmente:', style: AppTheme.resultStyle),
+                    Expanded(child: Container()),
+                    Text('${ calcFormPrvd.employerWithholding.toStringAsFixed( 2 ) } US\$', style: AppTheme.resultStyle),
+                  ],
+                ),
+              ],
+            )
         ],
       ),
     );

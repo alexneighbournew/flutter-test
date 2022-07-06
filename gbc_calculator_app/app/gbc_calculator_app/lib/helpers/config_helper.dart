@@ -130,7 +130,19 @@ class Config {
   static double getTotalTaxToPay( double totalTax, double discount  ) {
     double totalTaxPay = totalTax - discount;
 
-    return totalTaxPay < 0 ? 0.0 : totalTax;
+    return totalTaxPay < 0 ? 0.0 : totalTaxPay;
+  }
+
+  static double getEmployerWithholding( double totalTaxToPay ) {
+    return totalTaxToPay / 12;
+  }
+
+  static double getDifferentCapacityDeduction( int percentDifferentCaps ) {
+    return 22620 * ( percentDifferentCaps / 100 );
+  }
+
+  static double getTotalDeductions( double personalContribution, double differentCapacityDeduction ) {
+    return personalContribution + differentCapacityDeduction;
   }
   
 } 
