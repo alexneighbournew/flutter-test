@@ -1,0 +1,1 @@
+export 'package:gbc_calculator_app/models/validation_model.dart';
