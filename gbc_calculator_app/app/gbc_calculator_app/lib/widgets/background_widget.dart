@@ -22,12 +22,7 @@ class Background extends StatelessWidget {
 
         // Body
         _Body()
-
-        /*Text('Bienvenidos'),
-
-        Text('Calculadora'),
-
-        Image(image: AssetImage( 'assets/icons/arrow-down.gif' ))*/
+        
       ],
     );
   }

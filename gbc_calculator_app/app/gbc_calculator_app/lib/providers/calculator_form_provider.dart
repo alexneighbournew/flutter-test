@@ -1,12 +1,17 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:gbc_calculator_app/models/models.dart';
-
 class CalculatorFormProvider extends ChangeNotifier {
 
-  ValidationModel _salary = ValidationModel( null, null);
+  String _salary = '';
 
-  //ValidationModel _salary = ValidationModel( null, null);
+  String get salary => _salary;
+
+  set salary (String salary) {
+    _salary = salary;
+    notifyListeners();
+  }
+
+  
 
 }

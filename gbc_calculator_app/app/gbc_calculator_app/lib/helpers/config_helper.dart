@@ -7,10 +7,23 @@ class Config {
   static Map<String, String> formValues = {
     'salary'        : '',
     'grossIncome'   : '',
-    'sector'        : '',
-    'differentCaps' : '',
+    'sector'        : 'public',
+    'differentCaps' : 'no',
+    'percentsDifferentCaps' : '0',
     'personalExps'  : '',
   };
+
+  static double getGrossIncome( String? value ) {
+    String valueTmp = value ?? '';
+
+    if (valueTmp.isEmpty) return 0;
+    
+    double? parseValue = double.tryParse( valueTmp );
+
+    double result = parseValue ?? 0;
+
+    return result * 12;
+  }
 
   static List<Map<String, dynamic>> sectors = [
     { 'label': 'Público', 'value': 'public',  'percentage' : 9.45 },
@@ -20,6 +33,14 @@ class Config {
   static List<Map<String, dynamic>> differentCapacities = [
     { 'label': 'Sí', 'value': 'yes' },
     { 'label': 'No', 'value': 'no' },
+  ];
+  
+  static List<Map<String, dynamic>> percentsDifferentCaps = [
+    { 'label': 'Menos del 30%',  'value': 0 },
+    { 'label': 'Del 30 al 49%',  'value': 60 },
+    { 'label': 'Del 50 al 74%',  'value': 70 },
+    { 'label': 'Del 75 al 84%',  'value': 80 },
+    { 'label': 'Del 85 al 100%', 'value': 100 },
   ];
 
   static List<Map<String, dynamic>> tableTaxes = [

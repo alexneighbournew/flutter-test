@@ -23,6 +23,7 @@ class HomePage extends StatelessWidget {
         )
       ),
       child: PageView(
+        onPageChanged: (int index) => index == 0 ? FocusManager.instance.primaryFocus?.unfocus() : null,
         physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.vertical,
         children: const [
