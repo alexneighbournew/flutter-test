@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:gbc_calculator_app/helpers/helpers.dart' show Config, Debouncer;
+import 'package:gbc_calculator_app/providers/providers.dart'
+    show CalculatorFormProvider;
 import 'package:gbc_calculator_app/themes/theme.dart';
 import 'package:gbc_calculator_app/widgets/widgets.dart' show CustomInput;
+import 'package:provider/provider.dart';
 
 class CalculatorPage extends StatelessWidget {
   const CalculatorPage({Key? key}) : super(key: key);
@@ -20,11 +23,6 @@ class CalculatorPage extends StatelessWidget {
             children: const [
               // form
               _Form(),
-
-              // Results
-              _Results(),
-
-              SizedBox(height: 20)
             ],
           ),
         ));
@@ -43,12 +41,23 @@ class _Form extends StatefulWidget {
 class _FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
-    
     final GlobalKey<FormState> myFormKey = GlobalKey<FormState>();
 
     final Map<String, String> formValues = Config.formValues;
 
-    final debouncer = Debouncer(duration: const Duration(milliseconds: 500));    
+    final debouncer = Debouncer(duration: const Duration(milliseconds: 500));
+
+    double personalContribution = 0;
+    double netIncome            = 0;
+    double basicFraction        = 0;
+    double surplusFraction      = 0;
+    double taxOnBasicFraction   = 0;
+    double taxOnSurplusFraction = 0;
+    double totalTax             = 0;
+    double discountForPersonalExpenses = 0;
+    double totalTaxToPay = 0;
+
+    CalculatorFormProvider calcFormPrvd = Provider.of<CalculatorFormProvider>(context);
 
     return Form(
         key: myFormKey,
@@ -68,25 +77,26 @@ class _FormState extends State<_Form> {
 
                     debouncer.value = '';
 
-                    debouncer.onValue = ( value ) async {
+                    debouncer.onValue = (value) async {
                       setState(() {
                         formValues['salary'] = value;
-                        formValues['grossIncome'] = '${ Config.getGrossIncome( value ) }' ;
+                        formValues['grossIncome'] =
+                            '${Config.getGrossIncome(value)}';
                       });
                     };
 
-                    final timer = Timer.periodic(const Duration( milliseconds: 300), ( _ ) { 
+                    final timer =
+                        Timer.periodic(const Duration(milliseconds: 300), (_) {
                       debouncer.value = value;
                     });
 
-                    Future.delayed( const Duration(milliseconds: 301) ).then((value) => timer.cancel());
-                    
+                    Future.delayed(const Duration(milliseconds: 301))
+                        .then((value) => timer.cancel());
                   },
                 )),
-
-            // TODO: cálculo de los ingresos brutos anuales
             Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                padding: const EdgeInsets.only(
+                    left: 10, right: 10, top: 20, bottom: 6),
                 child: CustomInput(
                   readOnly: true,
                   initialValue: formValues['grossIncome'],
@@ -95,25 +105,33 @@ class _FormState extends State<_Form> {
                     print(value);
 
                     setState(() {
-                      formValues['grossIncome']  = value;
+                      formValues['grossIncome'] = value;
                     });
                   },
                 )),
-
-            const Text(
-              'Valor calculado automáticamente con respecto al Sueldo',
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: const [
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                      'Valor calculado automáticamente con respecto al Sueldo',
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                ),
+              ],
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
               child: DropdownButtonFormField<Object>(
                   value: formValues['sector'],
                   items: Config.sectors.map((value) {
-                    return DropdownMenuItem( value: value['value'], child: Text(value['label']));
+                    return DropdownMenuItem(
+                        value: value['value'], child: Text(value['label']));
                   }).toList(),
                   decoration: const InputDecoration(
                       labelText: '¿En qué Sector Trabajas?',
-                      helperText: 'Escoje el sector en el que trabajas'),
+                      helperText: 'Escoge el sector en el que trabajas'),
                   onChanged: (Object? value) {
                     print(value);
                     setState(() {
@@ -121,13 +139,14 @@ class _FormState extends State<_Form> {
                     });
                   }),
             ),
-
             Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                 child: DropdownButtonFormField<Object>(
                     value: formValues['differentCaps'],
                     items: Config.differentCapacities.map((value) {
-                      return DropdownMenuItem( value: value['value'], child: Text(value['label']));
+                      return DropdownMenuItem(
+                          value: value['value'], child: Text(value['label']));
                     }).toList(),
                     decoration: const InputDecoration(
                         labelText: '¿Tienes Capacidades Diferentes?',
@@ -140,26 +159,30 @@ class _FormState extends State<_Form> {
                         formValues['percentsDifferentCaps'] = '0';
                       });
                     })),
-
-            if (formValues['differentCaps'] != null && formValues['differentCaps']!.isNotEmpty && formValues['differentCaps']! == 'yes')
+            if (formValues['differentCaps'] != null &&
+                formValues['differentCaps']!.isNotEmpty &&
+                formValues['differentCaps']! == 'yes')
               Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                   child: DropdownButtonFormField<Object>(
                       value: '${formValues['percentsDifferentCaps']}',
                       items: Config.percentsDifferentCaps.map((value) {
-                        return DropdownMenuItem( value: '${value['value']}', child: Text(value['label']));
+                        return DropdownMenuItem(
+                            value: '${value['value']}',
+                            child: Text(value['label']));
                       }).toList(),
                       decoration: const InputDecoration(
                           labelText: 'Rango de Capacidad Diferente',
-                          helperText: 'Escoja el rango del Porcentaje de Capacidad Diferente que posee',
+                          helperText:
+                              'Escoja el rango del Porcentaje de Capacidad Diferente que posee',
                           helperMaxLines: 2),
                       onChanged: (Object? value) {
                         print(value);
                         setState(() {
                           formValues['percentsDifferentCaps'] = '$value';
                         });
-              })),
-
+                      })),
             Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
@@ -179,21 +202,21 @@ class _FormState extends State<_Form> {
 
                     debouncer.value = '';
 
-                    debouncer.onValue = ( value ) async {
+                    debouncer.onValue = (value) async {
                       setState(() {
                         formValues['personalExps'] = value;
                       });
                     };
 
-                    final timer = Timer.periodic(const Duration( milliseconds: 300), ( _ ) { 
+                    final timer =
+                        Timer.periodic(const Duration(milliseconds: 300), (_) {
                       debouncer.value = value;
                     });
 
-                    Future.delayed( const Duration(milliseconds: 301) ).then((value) => timer.cancel());
-                    
+                    Future.delayed(const Duration(milliseconds: 301))
+                        .then((value) => timer.cancel());
                   },
                 )),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
               child: OutlinedButton(
@@ -209,11 +232,44 @@ class _FormState extends State<_Form> {
 
                     if (!myFormKey.currentState!.validate()) {
                       print('Formulario no válido');
+
                       return;
                     }
 
                     // print form values
                     print(formValues);
+
+                    personalContribution = Config.getPersonalContribution(
+                        double.parse(formValues['grossIncome']!),
+                        formValues['sector']!);
+                    calcFormPrvd.personalContribution = personalContribution;
+
+                    netIncome = Config.getNetIncome(
+                        double.parse(formValues['grossIncome']!),
+                        personalContribution);
+                    calcFormPrvd.netIncome = netIncome;
+
+                    basicFraction = Config.getBasicFraction( netIncome );
+                    calcFormPrvd.basicFraction = basicFraction;
+
+                    surplusFraction = Config.getSurplusFraction( netIncome, basicFraction );
+                    calcFormPrvd.surplusFraction = surplusFraction;
+
+                    taxOnBasicFraction = Config.getTaxOnBasicFraction( netIncome );
+                    calcFormPrvd.taxOnBasicFraction = taxOnBasicFraction;
+
+                    taxOnSurplusFraction = Config.getTaxOnSurplusFraction( netIncome, surplusFraction );
+                    calcFormPrvd.taxOnSurplusFraction = taxOnSurplusFraction;
+
+                    totalTax = Config.getTotalTax( taxOnBasicFraction, taxOnSurplusFraction );
+                    calcFormPrvd.totalTax = totalTax;
+
+                    discountForPersonalExpenses = Config.getDiscountForPersonalExpenses( double.parse( formValues['personalExps']! )  );
+                    calcFormPrvd.discountForPersonalExpenses = discountForPersonalExpenses;
+
+                    totalTaxToPay = Config.getTotalTaxToPay(totalTax, discountForPersonalExpenses);
+                    calcFormPrvd.totalTaxToPay = totalTaxToPay;
+                    
                   },
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -231,7 +287,9 @@ class _FormState extends State<_Form> {
                           color: Colors.white,
                         )
                       ])),
-            )
+            ),
+            const _Results(),
+            const SizedBox(height: 20),
           ],
         ));
   }
@@ -244,15 +302,71 @@ class _Results extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    CalculatorFormProvider calcFormPrvd =
+        Provider.of<CalculatorFormProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Column(
         children: [
           Row(
             children: [
+              Text('Aporte Personal IESS:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.personalContribution.toStringAsFixed(2)} US\$',
+                  style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Ingresos Netos:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.netIncome.toStringAsFixed(2)} US\$', style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Fracción Básica:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.basicFraction.toStringAsFixed(2) } US\$',
+                  style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Fracción Excedente:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.surplusFraction.toStringAsFixed(2)} US\$',
+                  style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Impuesto sobre FB:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.taxOnBasicFraction.toStringAsFixed(2)} US\$',
+                  style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Text('Impuesto sobre FE:', style: AppTheme.resultStyle),
+              Expanded(child: Container()),
+              Text('${calcFormPrvd.taxOnSurplusFraction.toStringAsFixed(2)} US\$',
+                  style: AppTheme.resultStyle),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
               Text('Impuesto calculado:', style: AppTheme.resultStyle),
               Expanded(child: Container()),
-              Text('\$ 0.00', style: AppTheme.resultStyle),
+              Text('${ calcFormPrvd.totalTax.toStringAsFixed( 2 ) } US\$', style: AppTheme.resultStyle),
             ],
           ),
           const SizedBox(height: 5),
@@ -261,7 +375,7 @@ class _Results extends StatelessWidget {
               Text('Rebaja por gastos personales:',
                   style: AppTheme.resultStyle),
               Expanded(child: Container()),
-              Text('\$ 0.00', style: AppTheme.resultStyle),
+              Text('${ calcFormPrvd.discountForPersonalExpenses.toStringAsFixed( 2 ) } US\$', style: AppTheme.resultStyle),
             ],
           ),
           const SizedBox(height: 5),
@@ -269,7 +383,7 @@ class _Results extends StatelessWidget {
             children: [
               Text('Impuesto anual a pagar:', style: AppTheme.resultStyle),
               Expanded(child: Container()),
-              Text('\$ 0.00', style: AppTheme.resultStyle),
+              Text('${ calcFormPrvd.totalTaxToPay.toStringAsFixed( 2 ) } US\$', style: AppTheme.resultStyle),
             ],
           )
         ],
