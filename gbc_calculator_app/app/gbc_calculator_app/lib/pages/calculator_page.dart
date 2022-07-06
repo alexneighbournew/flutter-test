@@ -245,18 +245,20 @@ class _FormState extends State<_Form> {
                     personalContribution = Config.getPersonalContribution(
                         double.parse(formValues['grossIncome']!),
                         formValues['sector']!);
-                    calcFormPrvd.personalContribution = personalContribution;                    
-
-                    netIncome = Config.getNetIncome(
-                        double.parse(formValues['grossIncome']!),
-                        personalContribution);
-                    calcFormPrvd.netIncome = netIncome;                    
+                    calcFormPrvd.personalContribution = personalContribution;
 
                     differentCapacityDeduction = Config.getDifferentCapacityDeduction( int.parse( formValues['percentsDifferentCaps']!  ) );
                     calcFormPrvd.differentCapacityDeduction = differentCapacityDeduction;
 
-                    totalDeductions = Config.getTotalDeductions(personalContribution, differentCapacityDeduction);
+                    totalDeductions = Config.getTotalDeductions(personalContribution, differentCapacityDeduction, double.parse( formValues['personalExps']! ) );
                     calcFormPrvd.totalDeductions = totalDeductions;
+
+                    netIncome = Config.getNetIncome(
+                        double.parse(formValues['grossIncome']!),
+                        personalContribution,
+                        differentCapacityDeduction
+                      );
+                    calcFormPrvd.netIncome = netIncome;
 
                     basicFraction = Config.getBasicFraction( netIncome );
                     calcFormPrvd.basicFraction = basicFraction;

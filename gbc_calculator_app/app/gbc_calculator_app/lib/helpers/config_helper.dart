@@ -63,8 +63,8 @@ class Config {
 
   }
 
-  static double getNetIncome ( double grossIncome, double personalContribution) {    
-    return grossIncome - personalContribution;
+  static double getNetIncome ( double grossIncome, double personalContribution, double differentCapacityDeduction) {    
+    return grossIncome - personalContribution - differentCapacityDeduction;
   }
 
   static double getBasicFraction ( double netIncome ) {
@@ -141,8 +141,8 @@ class Config {
     return 22620 * ( percentDifferentCaps / 100 );
   }
 
-  static double getTotalDeductions( double personalContribution, double differentCapacityDeduction ) {
-    return personalContribution + differentCapacityDeduction;
+  static double getTotalDeductions( double personalContribution, double differentCapacityDeduction, double personalExpenses  ) {
+    return personalContribution + differentCapacityDeduction + personalExpenses;
   }
   
 } 
