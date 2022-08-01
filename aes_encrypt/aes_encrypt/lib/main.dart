@@ -1,12 +1,11 @@
+import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/services.dart';
 import 'package:aes_encrypt/utils/utils.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {  
   
 
   @override
@@ -18,16 +17,13 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Encriptado AES256'),
         ),
-        body: const MainForm(),
+        body: MainForm(),
       ),
     );
   }
 }
 
-class MainForm extends StatefulWidget {
-  const MainForm({
-    Key? key,    
-  }) : super(key: key);
+class MainForm extends StatefulWidget {  
 
   @override
   State<MainForm> createState() => _MainFormState();
@@ -35,13 +31,16 @@ class MainForm extends StatefulWidget {
 
 class _MainFormState extends State<MainForm> {
 
-  final txtController = TextEditingController();
+  final txtEncryptController = TextEditingController();
+  final txtDecryptController = TextEditingController();
   String encryptedText = '';
+  String decryptedText = '';
 
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    txtController.dispose();
+    txtEncryptController.dispose();
+    txtDecryptController.dispose();
     super.dispose();
   }
 
@@ -54,10 +53,11 @@ class _MainFormState extends State<MainForm> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
             child: TextField(
-              controller: txtController,
+              controller: txtEncryptController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Ingrese un texto para encriptar',
+                label: Text('Texto a encriptar'),
               ),
               onChanged: (text) => setState(() {
                 encryptedText = (_getEncryptedText(text) )['text'];
@@ -69,7 +69,7 @@ class _MainFormState extends State<MainForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(txtController.text),
+                Text(txtEncryptController.text),
                 Row(
                   children: [
                     SelectableText(encryptedText),
@@ -88,39 +88,72 @@ class _MainFormState extends State<MainForm> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TextField(
+              controller: txtDecryptController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Ingrese un texto para desencriptar',
+                label: Text('Texto a desencriptar'),
+              ),
+              onChanged: (text) => setState(() {
+                decryptedText = _getDecryptedText(text);
+              }),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(txtDecryptController.text),
+                Row(
+                  children: [
+                    SelectableText(decryptedText),
+                    decryptedText.isNotEmpty
+                      ? IconButton(
+                        tooltip: 'Copiar',
+                        onPressed: () => Clipboard
+                          .setData(ClipboardData(text: decryptedText))
+                          .then((value) => CommonMethods.showToast(context, "Clave desencriptada copiada al Portapapeles") ), 
+                        icon: const Icon(
+                          Icons.copy
+                        )
+                      ) : Container()
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
+  String _getDecryptedText(String encrypted) {
+    Encrypted tmpEncrypted;
+    try {
+      tmpEncrypted = Encrypted.fromBase64(encrypted);
+      print('tmpEncrypted: $tmpEncrypted');
+      if( tmpEncrypted.toString().isNotEmpty ) {
+        String decrypted = CommonMethods.decryptText(
+          encrypted: tmpEncrypted,
+          key: 'zhjhpyQ4hoHn2t6PFfdD1DXPOhe/EEq+uahHJYzNhF8='
+        );
+        return decrypted;
+      }
+    } catch (e) {
+      print('error Encrypted.fromBase64: $e');
+    }
+    return '';
+  }
+
   _getEncryptedText(String txt) {
-    dynamic encrypted = encryptText(
+    dynamic encrypted = CommonMethods.encryptText(
       text: txt,
       key: 'zhjhpyQ4hoHn2t6PFfdD1DXPOhe/EEq+uahHJYzNhF8='
     );
     return encrypted;
   }
-}
-
-dynamic encryptText({String? key, required String text}) {
-  if (text.isNotEmpty) {
-    final encrypterKey = key != null
-        ? encrypt.Key.fromBase64(key)
-        : encrypt.Key.fromSecureRandom(32);
-    final encrypterIv = encrypt.IV.fromLength(16);
-    final encrypter =
-        encrypt.Encrypter(encrypt.AES(encrypterKey, mode: encrypt.AESMode.cbc));
-    final encrypted = encrypter.encrypt(text, iv: encrypterIv);
-
-    return {
-      'key': encrypterKey.base64,
-      'text': encrypted.base64,
-    };
-  } else {
-    return {
-      'key': '',
-      'text': '',
-    };
-  }
-  
 }
